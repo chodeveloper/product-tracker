@@ -1,0 +1,76 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand {
+  white-space: nowrap;
+  text-align: center;
+  font-weight: bold;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover, 
+.navbar-dark .navbar-nav .nav-link:focus {
+  color: #ffffff;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  font-size: 14px !important;
+  min-height: 100%;
+  position: relative;
+}
+@media (min-width: 768px) {
+  html {
+    font-size: 16px !important;
+  }
+}
+
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 40px;
+}
+table#product th {
+  font-size: 14px !important;
+}
+table#product td {
+  font-size: 13px !important;
+}
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  /* Set the fixed height of the footer here */
+  height: 40px;
+  line-height: 40px; /* Vertically center the text there */
+}
+
+.addForm {
+    width: 100% !important;
+}
+@media (min-width: 768px) {
+  .addForm {
+    width: 50% !important;
+  }
+}
+
+.ui-autocomplete {
+  cursor: pointer;
+  height: 120px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+table.tablesorter input.disabled {
+  display: none;
+}
+
+table.tablesorter, .tablesorter-filter {
+  width: 100%;
+}
+
+.pager a {
+  text-decoration: none;
+}

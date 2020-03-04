@@ -1,0 +1,230 @@
+@using productTracker.Models
+@model productTracker.Models.Instance
+@{
+    ViewData["Title"] =  ViewData["request"] + " Product";
+}
+@section Scripts {
+    <script>
+        function SelectModel(selectname, listname, btnname) {
+            let prop = document.getElementById(listname);
+            if(prop != null) prop.remove();
+            let select = document.getElementById(selectname);
+            let model = select.options[select.selectedIndex];
+            let btn = document.getElementById(btnname);            
+            if (model.value != 0) {                
+                btn.click();
+            }
+        }
+
+        function BindProperties() {
+            let raw = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.propList))');
+            let propList = [];
+            for (let i=0; i<raw.length; i++) {
+                propList.push(raw[i].option);
+            }
+            //console.log(propList);
+
+            $('.lstPropName').autocomplete({
+                source: propList,
+                minLength: 0,
+                scroll: true
+            }).focus(function() {
+                $(this).autocomplete("search", "");
+            });
+        }
+
+        $(document).ready(function() {
+            BindProperties();
+            $("#childrenList").tabs();
+            let selectedTab = '@ViewBag.selected';
+            if (selectedTab != null) $("#tabchild"+selectedTab.toString()).click();
+        });
+    </script>
+}
+<div class="row py-4 d-flex flex-row justify-content-between align-items-center w-100 m-0"  style="user-select:none;">
+    <h2 class="mr-2"><i class="fas fa-plus-square text-danger"></i> @ViewData["request"] Product</h2>
+</div>
+<div class="row pt-2 pb-5 w-100 m-0">
+    <form name="new" class="w-100">
+        <div class="form-group d-sm-flex flex-sm-row justify-content-between">
+            <div class="small text-danger">
+                <span>@ViewData["error"]</span>
+            </div>
+            <div>
+                @if(ViewData["request"] == "Add") {
+                    <input type="submit" name="btnSubmit" class="btn btn-info py-1" value="Submit"
+                    formmethod="post" formaction="/Tracker/ProductAddSubmit" />
+                }else {
+                    <input type="submit" name="btnSubmit" class="btn btn-info py-1" value="Submit"
+                    formmethod="post" formaction="/Tracker/ProductEditSubmit?id=@Model.id" />
+                }                
+                <a asp-controller="Tracker" asp-action="Product" class="btn btn-light py-1">Cancel</a>
+            </div>            
+        </div>
+        <div class="d-sm-flex flex-sm-row justify-content-between w-100">
+            <div class="addForm pr-sm-5">
+                <div class="form-group py-1">
+                    <label class="font-weight-bold mr-2">Parent Model (Serial)</label>
+                    <select id="lstParent" 
+                            class="selectpicker" data-live-search="true"
+                            asp-for="pid"                            
+                            asp-items='ViewBag.parentList'></select>
+                </div>
+                <div>
+                    <input type="submit" class="d-none" value="getProperty" id="getProperty"
+                               formmethod="post" formaction="/Tracker/SelectModel" />
+                </div>
+                <div class="form-group py-1">
+                    <label class="font-weight-bold mr-2">Model #</label>
+                    <select id="lstModel" 
+                            class="selectpicker" data-live-search="true"
+                            name="pn"
+                            asp-for="pn"
+                            asp-items='ViewBag.modelList'
+                            onchange="SelectModel('lstModel', 'propertyList', 'getProperty');"></select>
+                </div>                
+                <div class="form-group py-1">
+                    <label class="font-weight-bold mr-2">Serial #</label>
+                    <input type="text" asp-for="sn" class="form-control d-inline-block" 
+                            maxlength="25" style="width:220px;"/>
+                </div>
+                <div class="form-group pt-2 pb-1">
+                    <div class="d-flex align-items-baseline">
+                        <button type="button" class="btn btn-info py-1 mr-2" data-toggle="modal" data-target="#addModel">Add Model</button>
+                        <input type="submit" name="addProperty" class="btn btn-dark py-1" value="Add Property"
+                               formmethod="post" formaction="/Tracker/AddProperty" />
+                    </div>
+                </div>                
+                <div id="propertyList">
+                    @if (Model.properties != null) {
+                        for (int i=0; i<Model.properties.Count; i++) {
+                        <div>                            
+                            <div class="form-group py-1">
+                                <div class="d-flex justify-content-between align-items-baseline" style="width:220px;">
+                                    <label class="font-weight-bold">Property@(i+1) Name</label>
+                                    <input type="submit" title="Delete Property@(i+1)" class="btn p-0" value="&times;"
+                                            formmethod="post" formaction="/Tracker/DeleteProperty?prop=@i" />
+                                </div>
+                                <input type="text" asp-for="properties[i].name" class="lstPropName form-control" maxlength="25" style="width:220px;" />            
+                            </div>
+                            <div class="form-group py-1">
+                                <label class="font-weight-bold">Property@(i+1) Value</label>
+                                <input type="text" asp-for="properties[i].value" class="form-control" maxlength="25" style="width:220px;" />
+                            </div>
+                        </div>
+                        }
+                    }
+                </div> 
+            </div>
+            <div class="addForm">
+                @if(ViewData["request"] == "Add") {
+                    <div class="form-group py-1">
+                        <input type="submit" name="action" class="btn btn-dark py-1" value="Add Child"
+                            formmethod="post" formaction="/Tracker/AddChild" />
+                    </div>  
+                }else {
+                    
+                }                    
+                @if (Model.children.Count != 0) {
+                    <div id="childrenList">
+                        <ul>
+                        @for (int c=0; c<Model.children.Count; c++) {                            
+                            <li><a id="tabchild@(c)" href="#child@(c+1)">Child@(c+1)</a></li>      
+                        }
+                        </ul>
+                        @for (int c=0; c<Model.children.Count; c++) {
+                            <div id="child@(c+1)">
+                                <div class="close">
+                                    <input type="submit" title="Delete Child@(c+1)" class="btn p-0" value="&times;"
+                                    formmethod="post" formaction="/Tracker/DeleteChild?ch=@c" />
+                                </div>
+                                <div class="form-group py-1">
+                                    <label class="font-weight-bold mr-2">Child@(c+1) Model #</label>
+                                    <select id="lstChildModel@(c+1)"
+                                            class="selectpicker" data-live-search="true"
+                                            asp-for="children[c].pn"
+                                            asp-items='ViewBag.modelList'
+                                            onchange="SelectModel('lstChildModel@(c+1)', 'childPropList@(c+1)', 'getChildProp@(c+1)'); SelectModel('childPropList@(c+1)');"></select>
+                                </div> 
+                                <div>
+                                    <input type="submit" class="d-none" value="getProperty" id="getChildProp@(c+1)"
+                                            formmethod="post" formaction="/Tracker/SelectChildModel?ch=@c" />
+                                </div>
+                                <div class="form-group py-1">
+                                    <label class="font-weight-bold mr-2">Child@(c+1) Serial #</label>
+                                    <input type="text" asp-for="children[c].sn" class="form-control d-inline-block" 
+                                            maxlength="25" style="width:220px;"/>
+                                </div>
+                                <div class="form-group pt-2 pb-1 m-0">
+                                    <div class="d-flex justify-content-between align-items-baseline">
+                                        <input type="submit" name="addProperty" class="btn btn-dark py-1" value="Add Property"
+                                            formmethod="post" formaction="/Tracker/AddChildProperty?ch=@c" />
+                                    </div>
+                                </div>
+                                <div id="childPropList@(c+1)" class="mt-2">
+                                    @if (Model.children[c].properties != null) {
+                                        for (int p=0; p<Model.children[c].properties.Count; p++) {
+                                        <div>
+                                            <div class="form-group py-1 mb-1">
+                                                <div class="d-flex justify-content-between align-items-baseline" style="width:220px;">
+                                                    <label class="font-weight-bold">Child@(c+1) Property@(p+1) Name</label>
+                                                    <input type="submit" title="Delete Child@(c+1) Property@(p+1)" class="btn p-0" value="&times;"
+                                                            formmethod="post" formaction="/Tracker/DeleteChildProperty?ch=@c&prop=@p" />
+                                                </div>
+                                                <input type="text" asp-for="children[c].properties[p].name" class="lstPropName form-control" maxlength="25" style="width:220px;" />            
+                                            </div>
+                                            <div class="form-group py-1">
+                                                <label class="font-weight-bold">Child@(c+1) Property@(p+1) Value</label>
+                                                <input type="text" asp-for="children[c].properties[p].value" class="form-control" maxlength="25" style="width:220px;" />
+                                            </div>
+                                        </div>
+                                        }
+                                    }
+                                </div> 
+                            </div>
+                        }
+                    </div>
+                }                          
+            </div>
+        </div>
+        
+    </form>
+</div>
+
+<div class="modal fade" id="addModel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    <form method="post">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add Model</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>    
+      <div class="modal-body">        
+        <div class="form-group py-1">
+            <label class="mr-2" style="width:120px;">Product Name</label>
+            <input type="text" asp-for="newDesc.model" class="form-control d-inline-block" maxlength="25" style="width:220px;" />
+        </div>
+        <div class="form-group py-1">
+            <label class="mr-2" style="width:120px;">Model #</label>
+            <input type="text" asp-for="newDesc.pn" class="form-control d-inline-block" maxlength="25" style="width:220px;" />
+        </div>
+        <div class="form-group py-1">
+            <label class="mr-2" style="width:120px;">Description</label>
+            <input type="text" asp-for="newDesc.description" class="form-control d-inline-block" maxlength="25" style="width:220px;" />
+        </div>
+        <div class="form-group py-1">
+            <label class="mr-2" style="width:120px;">Active</label>
+            <input type="checkbox" asp-for="newDesc.check" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <input type="submit" class="btn btn-info py-1" value="Submit"
+                             asp-controller="Tracker" asp-action="AddModel" />
+        <button type="button" class="btn btn-light py-1" data-dismiss="modal">Close</button>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>

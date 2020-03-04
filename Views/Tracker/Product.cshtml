@@ -1,0 +1,186 @@
+@{
+    ViewData["Title"] = "Product";
+}
+@model productTracker.Models.TrackerManager
+@section Scripts {
+    <script>
+        $('.tablesorter-childRow td').hide();
+
+        /*
+        var $table = $('table'),
+        pagerOptions = {
+            container: $(".pager"),
+            output: '{startRow} - {endRow} / {filteredRows} ({totalRows})',
+            fixedHeight: true,
+            removeRows: false,
+            cssGoto: '.gotoPage',
+            positionFixed: false
+        };
+        
+
+        $table
+            .tablesorter({
+                cssChildRow: "tablesorter-childRow",
+                headerTemplate : '{content}',
+                widthFixed: true,
+                showProcessing: true,
+                ignoreCase: true,
+                columns_tfoot: true,
+                widgets: ['filter']
+            })
+            .tablesorterPager(pagerOptions);
+        */
+        
+        $('.tablesorter').delegate('.toggle', 'click' ,function() {
+            $(this).closest('tr').nextUntil('tr:not(.tablesorter-childRow)').find('td').toggle();
+            return false;
+        });
+    
+        $("tr.tablesorter-filter-row td").first().css("display", "none");
+        $("tr.tablesorter-filter-row td:nth-child(2)").css("display", "none");
+        $("tr.tablesorter-filter-row td:nth-child(3)").css("display", "none");
+    
+        $("#ckbAll").on("click", function() {
+            $('.tablesorter-childRow td').toggle();
+        });
+        $(function() {
+            $('table.tablesorter').css("display", "table");
+        });
+    </script>
+}
+<div class="row py-4 d-flex flex-row justify-content-between align-items-center w-100 m-0"  style="user-select:none;">
+    <h2 class="mr-2"><i class="fas fa-list text-danger"></i> Product List</h2>
+    <a asp-controller="Tracker" asp-action="ProductAdd" class="btn btn-info py-2">Add Product</a>
+</div>
+
+<div class="row py-2 w-100 m-0">
+    <div class="row py-2 w-100 m-0"  style="user-select:none;">
+        <form asp-controller="Tracker" asp-action="UpdateSelect"
+                class="d-flex flex-row justify-content-between align-items-center w-100">
+            <div class="total">Showing @Model.firstRow - @Model.lastRow of @Model.itemTotal items</div>  
+
+            <input type="hidden" name="fPn" value="@Model.fPn" />     
+            <input type="hidden" name="fModel" value="@Model.fModel" />    
+            <input type="hidden" name="fSn" value="@Model.fSn" />    
+            <input type="hidden" name="fParent" value="@Model.fParent" />         
+
+            <div class="pager">  
+                @if(Model.currentPage == 1) {
+                    <i class="fas fa-fast-backward" class="first" alt="First" title="First page" style="color:#ccc"></i>
+                } else {
+                    <button type="submit" title="First Page" class="btn p-0"
+                                formmethod="post" formaction="/Tracker/NavigatePage?p=@Model.currentPage&nav=first">
+                        <i class="fas fa-fast-backward" class="first" alt="First" title="First page"></i>
+                    </button>
+                }     
+                @if(Model.currentPage == 1) {
+                    <i class="fas fa-backward" class="prev" alt="Prev" title="Previous page" style="color:#ccc"></i>
+                } else {
+                    <button type="submit" title="Previous Page" class="btn p-0"
+                                formmethod="post" formaction="/Tracker/NavigatePage?p=@Model.currentPage&nav=prev">
+                        <i class="fas fa-backward" class="prev" alt="Prev" title="Previous page"></i>
+                    </button>
+                    
+                }                
+                <select class="goTo"
+                        name="currentPage"
+                        asp-for="currentPage"
+                        asp-items="Model.SelectCurrentPage()" 
+                        onchange="this.form.submit();">
+                </select>
+                @if(Model.currentPage == Model.totalPage) {
+                     <i class="fas fa-forward" class="next" alt="Next" title="Next page" style="color:#ccc"></i>
+                } else {
+                    <button type="submit" title="Next Page" class="btn p-0"
+                                formmethod="post" formaction="/Tracker/NavigatePage?p=@Model.currentPage&nav=next">
+                        <i class="fas fa-forward" class="next" alt="Next" title="Next page"></i>
+                    </button>
+                } 
+                @if(Model.currentPage == Model.totalPage) {
+                    <i class="fas fa-fast-forward" class="last" alt="Last" title= "Last page" style="color:#ccc"></i>
+                } else {
+                    <button type="submit" title="Last Page" class="btn p-0"
+                                formmethod="post" formaction="/Tracker/NavigatePage?p=@Model.currentPage&nav=last">
+                        <i class="fas fa-fast-forward" class="last" alt="Last" title="Last page"></i>
+                    </button>
+                }
+            </div>
+
+            <div class="numRows">
+                Number of rows: 
+                <select class="pagesize"
+                        name="numRows"
+                        asp-for="numRows"
+                        asp-items="Model.SelectPageSize()" 
+                        onchange="this.form.submit();">
+
+                </select>
+            </div>            
+        </form>        
+    </div>
+    <div class="table-responsive-sm w-100">
+            <table class="tablesorter products table table-bordered table-hover table-condensed" style="display:none;">
+                <form asp-controller="Tracker" asp-action="SearchProduct">
+                    <thead class="bg-dark text-light">
+                        <tr>
+                            <th rowspan="2" class="text-center align-middle p-1" data-filter="false" data-sorter="false"><i id="ckbAll" class="fas fa-plus-square"></i></th>
+                            <th rowspan="2" class="text-center align-middle p-1" data-filter="false" data-sorter="false"><i class="fas fa-file"></i></th>
+                            <th rowspan="2" class="text-center align-middle p-1" data-filter="false" data-sorter="false"><i class="fas fa-pen"></i></th>
+                            <th class="text-center align-middle border-bottom-0" data-sorter="false">Model</th>
+                            <th class="text-center align-middle border-bottom-0" data-sorter="false">Product Name</th>
+                            <th class="text-center align-middle border-bottom-0" data-sorter="false">Serial</th>
+                            <th class="text-center align-middle border-bottom-0" data-sorter="false">Parent Model (Serial)</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center align-middle border-bottom-0" data-sorter="false">
+                                <input id="txtPn" type="text" name="fPn" asp-for="fPn" onchange="this.form.submit();" class="form-control" />
+                            </th>
+                            <th class="text-center align-middle border-bottom-0" data-sorter="false">
+                                <input id="txtModel" type="text" name="fModel" asp-for="fModel" onchange="this.form.submit();" class="form-control" />
+                            </th>
+                            <th class="text-center align-middle border-bottom-0" data-sorter="false">
+                                <input id="txtSn" type="text" name="fSn" asp-for="fSn" onchange="this.form.submit();" class="form-control" />
+                            </th>
+                            <th class="text-center align-middle border-bottom-0" data-sorter="false">
+                                <input id="txtParent" type="text" name="fParent" asp-for="fParent" onchange="this.form.submit();" class="form-control" />
+                            </th>
+                        </tr>
+                    </thead>
+                </form>
+                <tbody class="myAccordion">
+                    @foreach (var item in Model.products) {
+                        <tr class="mySelector">
+                            <td class="text-center"><a href="#" class="toggle"><i class="fas fa-plus-square"></i></a></td>
+                            @if(item.model == "icListen HF") {
+                                <td class="text-center"><a href="http://172.16.2.1/pt3/unit_config.php?de_dev_type=icListen+HF&de_sn=@item.sn&de_submit=Configurate" target="_blank"><i class="fas fa-file"></i></a></td>
+                            } else if (item.model == "icListen AF") {
+                                <td class="text-center"><a href="http://172.16.2.1/pt3/unit_config.php?de_dev_type=icListen+AF&de_sn=@item.sn&de_submit=Configurate" target="_blank"><i class="fas fa-file"></i></a></td>
+                            } else {
+                                <td></td>
+                            }
+                            <td class="text-center"><a href="/Tracker/ProductAdd?id=@item.id"><i class="fas fa-pen"></i></a></td>
+                            <td>@item.pn</td>
+                            <td>@item.model</td>
+                            <td class="text-center">@item.sn</td>
+                            @if(item.ppn != null) {
+                                <td>@item.ppn (@item.psn)</td>
+                            } else {
+                                <td></td>
+                            }
+                        </tr>
+                        <tr class="tablesorter-childRow">
+                            <td colspan="7">
+                                <div>
+                                    <h5>Product Details</h5>
+                                    <ul>
+                                        <li></li>
+                                    </ul>
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+    </div>
+</div>
